@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HT Julianto">
+<title>HT JULIANTO</title>
+
+<script>
+window._pnSDKReady=false;window._pnSDKFailed=false;
+function _onPNLoad(){
+  window._pnSDKReady=true;
+  if(window._pnSDKReadyCb)window._pnSDKReadyCb();
+  if(window._admPNReadyCb)window._admPNReadyCb();
+}
+function _onPNError(){
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/pubnub@7.2.0/dist/web/pubnub.min.js';
+  s.onload=_onPNLoad;
+  s.onerror=function(){window._pnSDKFailed=true;};
+  document.head.appendChild(s);
+}
+</script>
+<script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.0.min.js"
+        onload="_onPNLoad()" onerror="_onPNError()"></script>
+
+<style>
+/* ════ RESET ════ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:#0d0d0d;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px 14px 36px;font-family:'Courier New',monospace;color:#eee;}
+
+/* ════ REGISTER ════ */
+#regScreen{position:fixed;inset:0;background:#050a05;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:28px;}
+#regScreen.hide{display:none;}
+.reg-logo{font-size:30px;}
+.reg-title{font-size:15px;color:#ff6b00;letter-spacing:4px;font-weight:bold;}
+.reg-sub{font-size:9px;color:#282828;letter-spacing:3px;text-align:center;}
+.reg-box{width:100%;max-width:320px;background:#0e1a0e;border:2px solid #1e3a1e;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;}
+.reg-label{font-size:9px;color:#3a7800;letter-spacing:3px;}
+.reg-input{background:#071001;border:2px solid #1e3a1e;border-radius:8px;color:#aed000;font-family:'Courier New',monospace;font-size:20px;font-weight:bold;letter-spacing:3px;padding:12px 14px;width:100%;text-transform:uppercase;outline:none;}
+.reg-input:focus{border-color:#3a7800;}
+.reg-input::placeholder{color:#1e3a1e;font-size:11px;letter-spacing:2px;text-transform:none;}
+.reg-btn{width:100%;height:54px;background:linear-gradient(135deg,#1a5c00,#0e3800);border:2px solid #3a7800;border-radius:10px;color:#aed000;font-size:14px;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:3px;cursor:pointer;touch-action:manipulation;}
+.reg-btn:active{transform:scale(.97);}
+.reg-err{font-size:10px;color:#dd2222;letter-spacing:2px;text-align:center;min-height:14px;}
+
+/* ════ BLOCKED / KICK ════ */
+#blockedScreen{position:fixed;inset:0;background:#080000;z-index:950;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:30px;text-align:center;}
+#blockedScreen.show{display:flex;}
+.blk-icon{font-size:52px;}.blk-title{font-size:14px;color:#dd2222;letter-spacing:4px;font-weight:bold;}
+.blk-msg{font-size:10px;color:#551111;letter-spacing:1px;line-height:1.9;max-width:280px;}
+#kickOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:800;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:30px;text-align:center;}
+#kickOverlay.show{display:flex;}
+.kick-icon{font-size:44px;}.kick-title{font-size:14px;color:#ff8800;letter-spacing:4px;font-weight:bold;}
+.kick-msg{font-size:10px;color:#664400;letter-spacing:1px;line-height:1.9;max-width:280px;}
+.kick-reload{margin-top:10px;padding:10px 24px;background:#1a0800;border:2px solid #663300;border-radius:8px;color:#ff8800;font-family:'Courier New',monospace;font-size:11px;font-weight:bold;letter-spacing:2px;cursor:pointer;touch-action:manipulation;}
+
+/* ════ WAIT ACC SCREEN ════ */
+#waitScreen{position:fixed;inset:0;background:#050a05;z-index:620;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:30px;text-align:center;}
+#waitScreen.show{display:flex;}
+.wait-spin{font-size:56px;display:inline-block;animation:wspin 2s linear infinite;}
+@keyframes wspin{to{transform:rotate(360deg)}}
+.wait-title{font-size:14px;color:#ffaa00;letter-spacing:4px;font-weight:bold;}
+.wait-msg{font-size:11px;color:#775500;letter-spacing:1px;line-height:2;max-width:280px;}
+.wait-dots{display:flex;gap:7px;justify-content:center;}
+.wait-dot{width:9px;height:9px;border-radius:50%;background:#ffaa00;animation:wdot 1.2s infinite;}
+.wait-dot:nth-child(2){animation-delay:.2s;}.wait-dot:nth-child(3){animation-delay:.4s;}
+@keyframes wdot{0%,80%,100%{transform:scale(.3);opacity:.2}40%{transform:scale(1);opacity:1}}
+#waitStatus{font-size:9px;color:#664400;letter-spacing:2px;min-height:14px;}
+#rejectedScreen{position:fixed;inset:0;background:#060000;z-index:620;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:30px;text-align:center;}
+#rejectedScreen.show{display:flex;}
+.rej-icon{font-size:52px;}.rej-title{font-size:14px;color:#cc2222;letter-spacing:4px;font-weight:bold;}
+.rej-msg{font-size:11px;color:#551111;letter-spacing:1px;line-height:2;max-width:280px;}
+
+/* ════ ADMIN PENDING / APPROVED CARDS ════ */
+.a-pendcard{background:#1a1200;border:2px solid #664400;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;animation:newreq .6s ease;}
+@keyframes newreq{0%{border-color:#ffcc00;box-shadow:0 0 16px rgba(255,180,0,.5)}100%{border-color:#664400;box-shadow:none}}
+.a-pend-av{width:40px;height:40px;border-radius:50%;background:#221000;border:2px solid #884400;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;color:#ffcc44;font-weight:bold;}
+.a-pend-info{flex:1;min-width:0;}
+.a-pend-name{font-size:14px;font-weight:bold;color:#ffcc44;letter-spacing:2px;}
+.a-pend-email{font-size:9px;color:#997733;letter-spacing:1px;margin-top:2px;}
+.a-pend-id{font-size:8px;color:#664422;letter-spacing:1px;margin-top:1px;}
+.a-pend-act{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.a-acc-btn{height:34px;border-radius:6px;font-size:11px;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:1px;cursor:pointer;touch-action:manipulation;padding:0 12px;background:#002800;border:2px solid #007700;color:#44ff44;}
+.a-acc-btn:active{transform:scale(.93);}
+.a-tolak-btn{height:30px;border-radius:6px;font-size:10px;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:1px;cursor:pointer;touch-action:manipulation;padding:0 10px;background:#280000;border:2px solid #770000;color:#ff5555;}
+.a-tolak-btn:active{transform:scale(.93);}
+.a-apvcard{background:#071a07;border:2px solid #1a4a1a;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;}
+.a-apv-av{width:34px;height:34px;border-radius:50%;background:#0a2800;border:2px solid #226600;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#66cc44;font-weight:bold;}
+.a-apv-info{flex:1;min-width:0;}
+.a-apv-name{font-size:12px;color:#66cc44;letter-spacing:2px;font-weight:bold;}
+.a-apv-meta{font-size:9px;color:#3a6a3a;letter-spacing:1px;margin-top:2px;}
+.a-cabut-btn{height:28px;border-radius:6px;font-size:9px;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:1px;cursor:pointer;touch-action:manipulation;padding:0 8px;background:#200010;border:1px solid #550033;color:#cc4488;}
+.a-cabut-btn:active{transform:scale(.93);}
+.a-pend-badge{display:none;background:#ff4400;color:#fff;font-size:10px;font-weight:bold;border-radius:10px;padding:1px 8px;font-family:'Courier New',monospace;vertical-align:middle;margin-left:6px;}
+.a-pend-badge.show{display:inline;}
+
+/* ════ OFF OVERLAY ════ */
+#offOverlay{display:none;position:fixed;inset:0;background:#050505;z-index:700;flex-direction:column;align-items:center;justify-content:center;gap:24px;}
+#offOverlay.show{display:flex;}
+.off-logo{font-size:13px;color:#1a1a1a;letter-spacing:4px;}
+.off-pwrbtn{width:84px;height:84px;border-radius:50%;background:#0c0c0c;border:2px solid #1e1e1e;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.off-pwrbtn:active{transform:scale(.9);}
+.off-pwrbtn svg{width:38px;height:38px;stroke:#262626;fill:none;stroke-width:2.5;stroke-linecap:round;}
+.off-hint{font-size:10px;color:#1a1a1a;letter-spacing:3px;}
+
+/* ════ HEADER ════ */
+.hdr{width:100%;max-width:340px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.hdr-left{display:flex;flex-direction:column;gap:2px;}
+.hdr h1{font-size:15px;color:#ff6b00;letter-spacing:3px;}
+.hdr-name{font-size:9px;color:#3a7800;letter-spacing:2px;}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+
+/* ════ TOMBOL ADMIN ════ */
+#admBtn{
+  width:38px;height:38px;border-radius:9px;
+  background:#0a0f0a;border:1px solid #1a3010;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:18px;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+  flex-shrink:0;transition:all .2s;
+}
+#admBtn:active{transform:scale(.85);}
+#admBtn.adm-on{border-color:#3a7800;background:#071401;box-shadow:0 0 10px rgba(58,120,0,.4);}
+
+/* ════ POWER ════ */
+#pwrBtn{width:50px;height:50px;border-radius:50%;background:#141414;border:2px solid #282828;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;-webkit-user-select:none;user-select:none;}
+#pwrBtn svg{width:22px;height:22px;stroke:#404040;fill:none;stroke-width:2.5;stroke-linecap:round;transition:stroke .2s;}
+#pwrBtn.on{border-color:#2ecc2e;box-shadow:0 0 14px rgba(46,204,46,.2);}
+#pwrBtn.on svg{stroke:#2ecc2e;}
+#pwrBtn:active{transform:scale(.9);}
+#pwrBtn.on::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(46,204,46,.2);animation:pr 2s infinite;}
+@keyframes pr{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.4);opacity:0}}
+
+/* ════ LCD ════ */
+.lcd{width:100%;max-width:340px;background:#071401;border:2px solid #142806;border-radius:10px;padding:12px 14px;margin-bottom:14px;position:relative;overflow:hidden;}
+.lcd::before{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.1) 3px,rgba(0,0,0,.1) 4px);}
+.lcd-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+.lcd-lbl{font-size:9px;color:#2e5808;letter-spacing:3px;}
+#badge{font-size:9px;letter-spacing:2px;padding:2px 8px;border-radius:4px;background:#0a1c04;color:#264804;border:1px solid #142806;}
+#badge.stby{background:#141000;color:#806000;border-color:#281e00;}
+#badge.tx{background:#180400;color:#ff2200;border-color:#380800;animation:bl .4s infinite;}
+#badge.rx{background:#001418;color:#0099cc;border-color:#002e38;animation:bl .4s infinite;}
+#badge.load{background:#0e0a00;color:#cc8800;border-color:#291c00;animation:bl 1s infinite;}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.15}}
+#lcdNum{font-size:58px;font-weight:bold;color:#aed000;text-shadow:0 0 20px rgba(174,208,0,.28);line-height:1;text-align:center;margin:4px 0;letter-spacing:4px;}
+#lcdNum.dim{color:#1e2c00;text-shadow:none;}
+#lcdSt{font-size:11px;letter-spacing:2px;color:#2e5808;text-align:center;min-height:15px;}
+#lcdSt.ok{color:#2ecc2e;}#lcdSt.err{color:#dd2222;}#lcdSt.info{color:#dd8800;}
+#lcdSt.tx{color:#ff2200;animation:bl .4s infinite;}#lcdSt.rx{color:#0099cc;animation:bl .4s infinite;}
+#lcdPeers{font-size:10px;color:#182804;text-align:center;margin-top:6px;min-height:13px;}
+#lcdPeers.on{color:#44881a;}
+
+/* ════ MODE / CHANNEL ════ */
+.modewrap{width:100%;max-width:340px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.mbtn{height:50px;background:#0e0e0e;border:2px solid #1e1e1e;border-radius:10px;color:#3a3a3a;font-size:12px;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+.mbtn:active{transform:scale(.95);}
+.mbtn.an{background:#071e00;border-color:#3a7800;color:#aed000;}
+.mbtn.as{background:#120e00;border-color:#806000;color:#ffcc00;}
+#stbyNotice{width:100%;max-width:340px;background:#120e00;border:1px solid #281e00;border-radius:8px;padding:7px 12px;display:none;align-items:center;gap:8px;margin-bottom:12px;font-size:9px;color:#806000;letter-spacing:2px;}
+#stbyNotice.show{display:flex;}
+.sdot{width:7px;height:7px;border-radius:50%;background:#bb8800;flex-shrink:0;animation:sp 1.5s infinite;}
+@keyframes sp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+.chlbl{width:100%;max-width:340px;font-size:9px;color:#282828;letter-spacing:3px;text-align:center;margin-bottom:8px;}
+.chgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:100%;max-width:340px;margin-bottom:14px;}
+.cbtn{height:54px;background:#121212;border:2px solid #1e1e1e;border-radius:10px;color:#484848;font-size:21px;font-weight:bold;font-family:'Courier New',monospace;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;position:relative;transition:opacity .2s;}
+.cbtn:active{transform:scale(.93);}
+.cbtn.act{background:#071e00;border-color:#3a7800;color:#aed000;box-shadow:0 0 12px rgba(174,208,0,.15);}
+.cbtn.act::after{content:'';position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%;background:#2ecc2e;box-shadow:0 0 5px #2ecc2e;}
+.cbtn.notready{opacity:.32;cursor:not-allowed;}
+
+/* ════ PTT ════ */
+.pttwrap{width:100%;max-width:340px;margin-bottom:12px;}
+#pttBtn{width:100%;height:96px;background:linear-gradient(160deg,#c03800,#781e00);border:3px solid #c04400;border-radius:14px;color:#fff;font-size:18px;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:3px;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-user-select:none;user-select:none;touch-action:none;cursor:pointer;box-shadow:0 5px 18px rgba(160,46,0,.28),inset 0 1px 0 rgba(255,255,255,.07);}
+#pttBtn.act{background:linear-gradient(160deg,#ff4400,#bb2000);border-color:#ffaa00;transform:scale(.97);box-shadow:0 2px 8px rgba(255,80,0,.5),0 0 30px rgba(255,60,0,.15);}
+#pttBtn.dis{background:linear-gradient(160deg,#1c1c1c,#101010);border-color:#202020;color:#2e2e2e;pointer-events:none;}
+.ptthint{text-align:center;font-size:9px;color:#202020;letter-spacing:2px;margin-top:6px;}
+
+/* ════ BARS / STATUS ════ */
+#rxWrap{width:100%;max-width:340px;height:8px;border-radius:4px;background:#001218;overflow:hidden;margin-bottom:8px;}
+#rxFill{height:100%;width:0%;background:linear-gradient(to right,#003344,#00bbee);border-radius:4px;transition:width .06s;}
+#txWrap{width:100%;max-width:340px;height:8px;border-radius:4px;background:#180400;overflow:hidden;margin-bottom:8px;display:none;}
+#txWrap.show{display:block;}
+#txFill{height:100%;width:0%;background:linear-gradient(to right,#660000,#ff4400);border-radius:4px;transition:width .06s;}
+#srow{width:100%;max-width:340px;text-align:center;font-size:10px;color:#1e1e1e;letter-spacing:2px;min-height:15px;}
+#srow.ok{color:#2ecc2e;}#srow.err{color:#dd2222;}#srow.info{color:#dd8800;}
+
+/* ════ BANNERS ════ */
+#audioBanner{width:100%;max-width:340px;background:#001220;border:1px solid #003050;border-radius:8px;padding:8px 12px;display:none;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:9px;color:#0099cc;letter-spacing:2px;}
+#audioBanner.show{display:flex;}
+#audioBanner button{background:#003050;border:1px solid #006090;border-radius:6px;color:#00bbee;font-size:9px;font-family:'Courier New',monospace;letter-spacing:1px;padding:4px 10px;cursor:pointer;}
+#micBanner{width:100%;max-width:340px;background:#1a0000;border:2px solid #cc0000;border-radius:10px;padding:10px 14px;display:none;flex-direction:column;gap:8px;margin-bottom:10px;}
+#micBanner.show{display:flex;}
+#micBanner p{font-size:10px;color:#ff6666;letter-spacing:1px;line-height:1.6;margin:0;}
+#micRetry{background:#cc0000;border:none;border-radius:8px;color:#fff;font-size:11px;font-family:'Courier New',monospace;font-weight:bold;letter-spacing:2px;padding:10px;cursor:pointer;touch-action:manipulation;width:100%;}
+#micRetry:active{transform:scale(.97);}
+#netBanner{width:100%;max-width:340px;background:#0e0800;border:1px solid #2a1a00;border-radius:8px;padding:7px 12px;display:none;align-items:center;gap:8px;margin-bottom:10px;font-size:9px;color:#cc7700;letter-spacing:2px;}
+#netBanner.show{display:flex;}
+.nbdot{width:7px;height:7px;border-radius:50%;background:#ff8800;flex-shrink:0;animation:nb 0.8s infinite;}
+@keyframes nb{0%,100%{opacity:1}50%{opacity:.2}}
+#dbgPanel{width:100%;max-width:340px;background:#000;border:1px solid #333;border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:10px;color:#0f0;font-family:'Courier New',monospace;line-height:1.8;word-break:break-all;min-height:80px;}
+
+/* ══════════════════════════════════════
+   ADMIN OVERLAY
+══════════════════════════════════════ */
+#admOverlay{display:none;position:fixed;inset:0;z-index:2000;background:#030803;flex-direction:column;}
+#admOverlay.show{display:flex;}
+
+/* LOGIN */
+#admLogin{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:20px;padding:30px;}
+#admLogin.hide{display:none;}
+.adm-login-title{font-size:20px;color:#ff6b00;letter-spacing:4px;font-weight:bold;}
+.adm-login-sub{font-size:9px;color:#1a3010;letter-spacing:3px;}
+.adm-login-box{width:100%;max-width:320px;background:#0a140a;border:2px solid #1a3010;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;}
+.adm-login-label{font-size:9px;color:#3a7800;letter-spacing:3px;}
+.adm-pw-input{background:#050f05;border:2px solid #1a3010;border-radius:8px;color:#ff6b00;font-family:'Courier New',monospace;font-size:16px;font-weight:bold;letter-spacing:4px;padding:12px 14px;width:100%;outline:none;text-transform:uppercase;}
+.adm-pw-input:focus{border-color:#3a7800;}
+.adm-login-btn{width:100%;height:54px;background:linear-gradient(135deg,#1a3c00,#0a2000);border:2px solid #3a7800;border-radius:10px;color:#aed000;font-size:14px;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:3px;cursor:pointer;touch-action:manipulation;}
+.adm-login-btn:active{transform:scale(.97);}
+.adm-login-err{font-size:10px;color:#dd2222;letter-spacing:2px;text-align:center;min-height:14px;}
+.adm-back-btn{font-size:10px;color:#1a3010;letter-spacing:2px;cursor:pointer;padding:10px 24px;border:1px solid #1a3010;border-radius:8px;touch-action:manipulation;}
+.adm-back-btn:active{color:#aed000;border-color:#3a7800;}
+
+/* PANEL */
+#admPanel{display:none;flex-direction:column;flex:1;overflow-y:auto;}
+#admPanel.show{display:flex;}
+.adm-hdr{background:#071a07;border-bottom:3px solid #3a7800;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;flex-shrink:0;}
+.adm-hdr-title{font-size:16px;color:#ff6b00;letter-spacing:3px;font-weight:bold;}
+.adm-hdr-right{display:flex;align-items:center;gap:8px;}
+.adm-pn-st{font-size:10px;letter-spacing:2px;padding:4px 10px;border-radius:4px;font-weight:bold;}
+.adm-pn-st.on{background:#0a2800;color:#66ff44;border:2px solid #336600;}
+.adm-pn-st.off{background:#280000;color:#ff6644;border:2px solid #881100;animation:blink .8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.adm-logout-btn{font-size:10px;color:#aa4444;letter-spacing:1px;cursor:pointer;padding:5px 10px;border:2px solid #551111;border-radius:4px;touch-action:manipulation;font-weight:bold;}
+.adm-logout-btn:active{color:#dd2222;}
+.adm-radio-btn{font-size:10px;color:#88cc44;letter-spacing:1px;cursor:pointer;padding:5px 12px;border:2px solid #3a7800;border-radius:4px;touch-action:manipulation;font-weight:bold;}
+.adm-radio-btn:active{background:#071401;}
+.adm-body{flex:1;padding:14px;display:flex;flex-direction:column;gap:14px;max-width:480px;margin:0 auto;width:100%;}
+
+/* STATS */
+.a-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.a-stat{background:#071a07;border:2px solid #2a5200;border-radius:10px;padding:12px;text-align:center;}
+.a-stat-n{font-size:32px;font-weight:bold;color:#aed000;line-height:1;text-shadow:0 0 12px rgba(174,208,0,.3);}
+.a-stat-l{font-size:10px;color:#88cc44;letter-spacing:2px;margin-top:6px;font-weight:bold;}
+.a-sec{font-size:11px;color:#88cc44;letter-spacing:3px;margin-bottom:10px;font-weight:bold;border-left:3px solid #3a7800;padding-left:8px;}
+.a-bc-box{background:#071a07;border:2px solid #2a5200;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.a-bc-in{background:#030f03;border:2px solid #2a5200;border-radius:6px;color:#aed000;font-family:'Courier New',monospace;font-size:14px;padding:10px 12px;width:100%;outline:none;}
+.a-bc-in::placeholder{color:#3a5a20;font-size:11px;}
+.a-bc-in:focus{border-color:#66cc00;}
+.a-bc-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.a-bc-btn{height:48px;background:#0a2000;border:2px solid #3a7800;border-radius:8px;color:#aed000;font-size:12px;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:2px;cursor:pointer;touch-action:manipulation;}
+.a-bc-btn:active{transform:scale(.96);}
+.a-bc-btn.warn{background:#200800;border-color:#994400;color:#ffaa44;}
+
+/* CHANNELS */
+.a-ch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.a-ch{background:#071a07;border:2px solid #1a3a1a;border-radius:8px;padding:10px 8px;text-align:center;}
+.a-ch.act{border-color:#66cc00;background:#0a2800;box-shadow:0 0 8px rgba(102,204,0,.2);}
+.a-ch-n{font-size:26px;font-weight:bold;color:#3a6a3a;letter-spacing:2px;}
+.a-ch.act .a-ch-n{color:#aed000;text-shadow:0 0 10px rgba(174,208,0,.4);}
+.a-ch-c{font-size:9px;color:#3a6a3a;letter-spacing:1px;margin-top:3px;}
+.a-ch.act .a-ch-c{color:#88cc44;font-weight:bold;}
+
+/* USERS */
+.a-ulist{display:flex;flex-direction:column;gap:8px;}
+.a-ucard{background:#071a07;border:2px solid #1a3a1a;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.a-uav{width:40px;height:40px;border-radius:50%;background:#0a2800;border:2px solid #3a7800;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;color:#aed000;font-weight:bold;}
+.a-uinfo{flex:1;min-width:0;}
+.a-uname{font-size:14px;font-weight:bold;color:#aed000;letter-spacing:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.a-umeta{font-size:10px;color:#88cc44;letter-spacing:1px;margin-top:3px;}
+.a-uid{font-size:9px;color:#4a7a4a;letter-spacing:1px;margin-top:2px;}
+.a-uemail{font-size:9px;color:#5a8a5a;letter-spacing:1px;margin-top:1px;}
+.a-uact{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.a-ubtn{height:32px;border-radius:6px;font-size:10px;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:1px;cursor:pointer;touch-action:manipulation;padding:0 12px;}
+.a-ubtn:active{transform:scale(.94);}
+.a-ukick{background:#280800;border:2px solid #883300;color:#ffaa44;}
+.a-uban{background:#280000;border:2px solid #880000;color:#ff6666;}
+.a-uunban{background:#100028;border:2px solid #4400aa;color:#aa66ff;}
+.a-uon{background:#002800;border:2px solid #007700;color:#44ff44;}
+.a-uoff{background:#200800;border:2px solid #885500;color:#ffaa00;}
+.a-ucard-muted{border-color:#552222 !important;background:#160808 !important;}
+
+/* BAN LIST */
+.a-bancard{background:#1a0505;border:2px solid #551111;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.a-banname{flex:1;font-size:13px;color:#ff6666;letter-spacing:2px;font-weight:bold;}
+.a-banmeta{font-size:9px;color:#884444;letter-spacing:1px;margin-top:2px;}
+.a-empty{text-align:center;color:#4a7a4a;font-size:11px;letter-spacing:2px;padding:24px;background:#071a07;border:2px solid #1a3a1a;border-radius:10px;}
+
+/* TOAST */
+#admToast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#0a1a00;border:2px solid #3a7800;border-radius:10px;color:#aed000;font-size:11px;font-family:'Courier New',monospace;letter-spacing:2px;padding:10px 20px;z-index:3000;transition:transform .3s;white-space:nowrap;}
+#admToast.show{transform:translateX(-50%) translateY(0);}
+#admToast.err{background:#1a0000;border-color:#660000;color:#ff4444;}
+
+/* DIALOG */
+#admDlg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:3000;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;}
+#admDlg.show{display:flex;}
+.a-dlg-box{background:#0a0f0a;border:2px solid #1a3010;border-radius:14px;padding:20px;max-width:320px;width:100%;display:flex;flex-direction:column;gap:14px;}
+.a-dlg-title{font-size:13px;color:#ff6b00;letter-spacing:3px;font-weight:bold;text-align:center;}
+.a-dlg-msg{font-size:11px;color:#3a7800;letter-spacing:1px;text-align:center;line-height:1.8;}
+.a-dlg-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.a-dlg-btn{height:46px;border-radius:8px;font-size:12px;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:2px;cursor:pointer;touch-action:manipulation;}
+.a-dlg-btn:active{transform:scale(.96);}
+.a-dlg-cancel{background:#0a0f0a;border:2px solid #1a3010;color:#3a7800;}
+.a-dlg-ok{background:#200000;border:2px solid #660000;color:#ff4444;}
+.a-dlg-ok.warn{background:#1a0800;border-color:#663300;color:#ff8844;}
+.a-dlg-reason{background:#030803;border:1px solid #1a3010;border-radius:6px;color:#aed000;font-family:'Courier New',monospace;font-size:12px;padding:10px;width:100%;outline:none;}
+.a-dlg-reason::placeholder{color:#1a3010;}
+</style>
+</head>
+<body>
+
+<!-- ════ WAIT ACC ════ -->
+<div id="waitScreen">
+  <div class="wait-spin">⏳</div>
+  <div class="wait-title">MENUNGGU PERSETUJUAN</div>
+  <div class="wait-msg">Permintaan kamu sudah dikirim ke admin.<br>Tunggu persetujuan untuk bisa menggunakan radio.</div>
+  <div class="wait-dots"><div class="wait-dot"></div><div class="wait-dot"></div><div class="wait-dot"></div></div>
+  <div id="waitStatus">Menghubungkan...</div>
+</div>
+
+<!-- ════ REJECTED ════ -->
+<div id="rejectedScreen">
+  <div class="rej-icon">❌</div>
+  <div class="rej-title">PERMINTAAN DITOLAK</div>
+  <div class="rej-msg" id="rejMsg">Admin menolak permintaan kamu.<br>Hubungi admin untuk info lebih lanjut.</div>
+</div>
+
+<!-- ════ BLOCKED ════ -->
+<div id="blockedScreen">
+  <div class="blk-icon">🚫</div>
+  <div class="blk-title">AKSES DIBLOKIR</div>
+  <div class="blk-msg">Anda telah diblokir oleh Administrator.<br>Hubungi admin untuk informasi lebih lanjut.</div>
+</div>
+
+<!-- ════ KICK ════ -->
+<div id="kickOverlay">
+  <div class="kick-icon">⚠️</div>
+  <div class="kick-title">DIPUTUS ADMIN</div>
+  <div class="kick-msg" id="kickMsg">Anda telah diputus dari jaringan oleh Administrator.</div>
+  <button class="kick-reload" onclick="location.reload()">↻ COBA LAGI</button>
+</div>
+
+<!-- ════ REGISTER ════ -->
+<div id="regScreen">
+  <div class="reg-logo">📡</div>
+  <div class="reg-title">HT JULIANTO</div>
+  <div class="reg-sub">KOMUNIKASI DIGITAL</div>
+  <div class="reg-box">
+    <div class="reg-label">NAMA PANGGILAN</div>
+    <input class="reg-input" id="regName" type="text" maxlength="16"
+      placeholder="contoh: BUDI..."
+      autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+    <div class="reg-label" style="margin-top:4px">EMAIL (ID PERMANEN HP INI)</div>
+    <input class="reg-input" id="regEmail" type="email" maxlength="60"
+      placeholder="budi@gmail.com"
+      autocomplete="email" autocorrect="off" autocapitalize="none" spellcheck="false"
+      style="font-size:13px;letter-spacing:1px;text-transform:lowercase;">
+    <div class="reg-err" id="regErr"></div>
+    <button class="reg-btn" ontouchstart="doRegister(event)" onclick="doRegister(event)">▶ MASUK JARINGAN</button>
+  </div>
+  <div class="reg-sub" style="color:#151515">Nama terlihat oleh sesama pengguna</div>
+</div>
+
+<!-- ════ OFF OVERLAY ════ -->
+<div id="offOverlay">
+  <div class="off-logo">📡 HT JULIANTO</div>
+  <div class="off-pwrbtn" onclick="pwrOn()">
+    <svg viewBox="0 0 24 24"><path d="M12 2v6M6.34 6.34A9 9 0 1 0 17.66 6.34"/></svg>
+  </div>
+  <div class="off-hint">TEKAN UNTUK NYALAKAN</div>
+</div>
+
+<!-- ════ MAIN UI ════ -->
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>📡 HT JULIANTO</h1>
+    <div class="hdr-name" id="hdrName">KOMUNIKASI DIGITAL</div>
+  </div>
+  <div class="hdr-right">
+    <!-- TOMBOL ADMIN — ketuk untuk masuk panel kontrol -->
+    <div id="admBtn" onclick="adm_open()" title="Admin Panel">🛡️</div>
+    <div id="pwrBtn" class="on" onclick="pwrOff()">
+      <svg viewBox="0 0 24 24"><path d="M12 2v6M6.34 6.34A9 9 0 1 0 17.66 6.34"/></svg>
+    </div>
+  </div>
+</div>
+
+<div id="audioBanner">
+  <span>🔊 KETUK LAYAR AKTIFKAN AUDIO</span>
+  <button onclick="forceUnlockAudio()">AKTIFKAN</button>
+</div>
+<div id="micBanner">
+  <p>⚠ MIKROFON DITOLAK — hanya bisa mendengar, tidak bisa bicara.<br>
+  Tap tombol di bawah lalu pilih <b>IZINKAN</b> saat popup muncul.<br>
+  Atau: Chrome → ⋮ → Setelan → Izin situs → Mikrofon → Izinkan.</p>
+  <button id="micRetry" onclick="retryMic()">🎙 IZINKAN MIKROFON</button>
+</div>
+<div id="netBanner">
+  <div class="nbdot"></div>
+  <span id="netBannerTxt">MEMUAT SDK JARINGAN...</span>
+</div>
+
+<div class="lcd">
+  <div class="lcd-top"><span class="lcd-lbl">CHANNEL</span><span id="badge" class="load">MEMUAT</span></div>
+  <div id="lcdNum" class="dim">-</div>
+  <div id="lcdSt" class="info">MEMUAT SDK...</div>
+  <div id="lcdPeers">Menghubungkan ke jaringan...</div>
+</div>
+
+<div class="modewrap">
+  <button class="mbtn an" id="btnN" onclick="doMode('normal')">📶 NORMAL</button>
+  <button class="mbtn"    id="btnS" onclick="doMode('standby')">💤 STANDBY</button>
+</div>
+<div id="stbyNotice"><div class="sdot"></div><span>STANDBY · MONITOR AKTIF · LAYAR BISA MATI</span></div>
+
+<div class="chlbl">PILIH CHANNEL — SAMA = TERSAMBUNG</div>
+<div class="chgrid">
+  <button class="cbtn notready" onclick="doCh(1)">1</button>
+  <button class="cbtn notready" onclick="doCh(2)">2</button>
+  <button class="cbtn notready" onclick="doCh(3)">3</button>
+  <button class="cbtn notready" onclick="doCh(4)">4</button>
+  <button class="cbtn notready" onclick="doCh(5)">5</button>
+  <button class="cbtn notready" onclick="doCh(6)">6</button>
+  <button class="cbtn notready" onclick="doCh(7)">7</button>
+  <button class="cbtn notready" onclick="doCh(8)">8</button>
+  <button class="cbtn notready" onclick="doCh(9)">9</button>
+</div>
+
+<div class="pttwrap">
+  <button id="pttBtn"
+    ontouchstart="pttON(event)"
+    ontouchend="pttOFF(event)"
+    ontouchcancel="pttOFF(event)">
+    🎙 TAHAN = BICARA
+  </button>
+  <div class="ptthint" id="pttHint">TAHAN TOMBOL UNTUK BICARA · LEPAS = SELESAI</div>
+</div>
+
+<div id="txWrap"><div id="txFill"></div></div>
+<div id="rxWrap"><div id="rxFill"></div></div>
+<div id="srow">MENGINISIALISASI...</div>
+<div id="dbgPanel">DBG: init...</div>
+<div id="audioBox" style="display:none"></div>
+
+<!-- ══════════════════════════════════════
+     ADMIN OVERLAY
+══════════════════════════════════════ -->
+<div id="admOverlay">
+
+  <!-- LOGIN SCREEN -->
+  <div id="admLogin">
+    <div style="font-size:40px">🛡️</div>
+    <div class="adm-login-title">ADMIN PANEL</div>
+    <div class="adm-login-sub">HT JULIANTO · KONTROL PENUH</div>
+    <div class="adm-login-box">
+      <div class="adm-login-label">KODE ADMIN (6 DIGIT)</div>
+      <input class="adm-pw-input" id="admPwInput" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+        placeholder="• • • • • •" autocomplete="off">
+      <div class="adm-login-err" id="admLoginErr"></div>
+      <button class="adm-login-btn" onclick="adm_login()">🔓 MASUK PANEL</button>
+    </div>
+    <div class="adm-back-btn" onclick="adm_close()">← KEMBALI KE RADIO</div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="admPanel">
+    <div class="adm-hdr">
+      <div class="adm-hdr-title">🛡️ ADMIN PANEL</div>
+      <div class="adm-hdr-right">
+        <div class="adm-pn-st off" id="admPnSt">OFFLINE</div>
+        <div class="adm-radio-btn" onclick="adm_close()">📡 RADIO</div>
+        <div class="adm-logout-btn" onclick="adm_logout()">KELUAR</div>
+      </div>
+    </div>
+
+    <div class="adm-body">
+
+      <!-- STATS -->
+      <div class="a-stats">
+        <div class="a-stat"><div class="a-stat-n" id="aSOnline">0</div><div class="a-stat-l">ONLINE</div></div>
+        <div class="a-stat"><div class="a-stat-n" id="aSPending" style="color:#ffaa00;">0</div><div class="a-stat-l" style="color:#cc8800;">NUNGGU ACC</div></div>
+        <div class="a-stat"><div class="a-stat-n" id="aSBanned">0</div><div class="a-stat-l">DIBLOKIR</div></div>
+      </div>
+
+      <!-- PERMINTAAN MASUK -->
+      <div>
+        <div class="a-sec">📥 MINTA MASUK <span class="a-pend-badge" id="aPendBadge">0</span></div>
+        <div class="a-ulist" id="aPendingList"><div class="a-empty">Tidak ada permintaan masuk</div></div>
+      </div>
+
+      <!-- DAFTAR DI-ACC -->
+      <div>
+        <div class="a-sec">✅ SUDAH DI-ACC (<span id="aApvCnt">0</span>)</div>
+        <div class="a-ulist" id="aApvList"><div class="a-empty">Belum ada yang di-ACC</div></div>
+      </div>
+
+      <!-- BROADCAST -->
+      <div>
+        <div class="a-sec">📢 BROADCAST KE SEMUA</div>
+        <div class="a-bc-box">
+          <input class="a-bc-in" id="aBcMsg" type="text" maxlength="80"
+            placeholder="Ketik pesan untuk semua pengguna..." autocomplete="off">
+          <div class="a-bc-btns">
+            <button class="a-bc-btn" onclick="adm_broadcast()">📣 UMUMKAN</button>
+            <button class="a-bc-btn warn" onclick="adm_kickAll()">⚡ PUTUS SEMUA</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHANNELS -->
+      <div>
+        <div class="a-sec">📡 STATUS CHANNEL</div>
+        <div class="a-ch-grid" id="aChGrid"></div>
+      </div>
+
+      <!-- USER LIST -->
+      <div>
+        <div style="display:flex;align-items:center;margin-bottom:10px;gap:8px;">
+          <div class="a-sec" style="margin:0">👥 PENGGUNA ONLINE</div>
+          <div style="margin-left:auto;display:flex;gap:6px;">
+            <button id="aFAll" onclick="adm_filter('all')"
+              style="font-size:8px;padding:4px 10px;background:#071e00;border:1px solid #2a5200;border-radius:5px;color:#88cc44;font-family:'Courier New',monospace;cursor:pointer;">SEMUA</button>
+            <button id="aFCh" onclick="adm_filter('ch')"
+              style="font-size:8px;padding:4px 10px;background:#0a0a0a;border:1px solid #222;border-radius:5px;color:#444;font-family:'Courier New',monospace;cursor:pointer;">DI CH</button>
+          </div>
+        </div>
+        <div class="a-ulist" id="aUserList"><div class="a-empty">Menunggu pengguna bergabung...</div></div>
+      </div>
+
+      <!-- BAN LIST -->
+      <div>
+        <div class="a-sec">🚫 DAFTAR BLOKIR (<span id="aBanCnt">0</span>)</div>
+        <div class="a-ulist" id="aBanList"><div class="a-empty">Belum ada yang diblokir</div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TOAST & DIALOG -->
+<div id="admToast"></div>
+<div id="admDlg">
+  <div class="a-dlg-box">
+    <div class="a-dlg-title" id="aDlgTitle">KONFIRMASI</div>
+    <div class="a-dlg-msg" id="aDlgMsg">Yakin?</div>
+    <input class="a-dlg-reason" id="aDlgReason" type="text" maxlength="60" placeholder="Alasan (opsional)..." autocomplete="off">
+    <div class="a-dlg-btns">
+      <button class="a-dlg-btn a-dlg-cancel" onclick="adm_closeDlg()">BATAL</button>
+      <button class="a-dlg-btn a-dlg-ok" id="aDlgOk" onclick="adm_confirmDlg()">YA</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN APP SCRIPT
+══════════════════════════════════════ -->
+<script>
+'use strict';
+const GID='JULIANTO2024',PP='demo',PS='demo',ADMIN_SECRET='JULIADMIN99';
+const LOBBY_CH='ht_'+GID+'_lobby',CMD_CH='ht_'+GID+'_cmd_'+ADMIN_SECRET;
+const ICE_SERVERS=[
+  {urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},
+  {urls:'stun:stun2.l.google.com:19302'},
+  {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
+];
+// ── PERSISTENT IDENTITY (1 HP = 1 ID berdasarkan email) ──
+const _ID_KEY='ht_identity_'+GID;
+let _savedId=null;try{_savedId=JSON.parse(localStorage.getItem(_ID_KEY));}catch(e){}
+const ME=(_savedId&&_savedId.uid)?_savedId.uid:genId();
+let _userEmail=(_savedId&&_savedId.email)||'';
+// ── APPROVAL STATUS ──
+const SELF_APPR_KEY='ht_approved_'+GID;
+const _IS_ADMIN_KEY='ht_admin_auth_'+GID;
+// Cek admin dari SEMUA kemungkinan tempat penyimpanan
+function _checkIsAdmin(){
+  try{if(localStorage.getItem(_IS_ADMIN_KEY)==='1')return true;}catch(e){}
+  try{if(sessionStorage.getItem(_IS_ADMIN_KEY)==='1')return true;}catch(e){}
+  try{const id=JSON.parse(localStorage.getItem(_ID_KEY));if(id&&id.isAdmin)return true;}catch(e){}
+  return false;
+}
+let _thisIsAdmin=_checkIsAdmin();
+let _isApproved=false;
+try{
+  _isApproved=localStorage.getItem(SELF_APPR_KEY)==='1';
+  if(!_isApproved)try{_isApproved=sessionStorage.getItem(SELF_APPR_KEY)==='1';}catch(e){}
+  if(_thisIsAdmin){_isApproved=true;} // Admin selalu approved
+}catch(e){if(_thisIsAdmin)_isApproved=true;}
+let _jrTimer=null;
+// Pre-fill form jika sudah pernah daftar
+(function(){if(_savedId&&_savedId.name){const rn=document.getElementById('regName');if(rn)rn.value=_savedId.name;}if(_savedId&&_savedId.email){const re=document.getElementById('regEmail');if(re)re.value=_savedId.email;}})();
+let NAME='',ch=0,pn=null,peers={},mic=null,isTX=false,isOn=true,mode='normal';
+let actx=null,wl=null,pnReady=false,txAna=null,txBuf=null,txRaf=null,hbTimer=null;
+const D=id=>document.getElementById(id);
+let _dbg=[];
+function dbg(t){const ts=new Date().toLocaleTimeString('id',{hour:'2-digit',minute:'2-digit',second:'2-digit'});_dbg.push('['+ts+'] '+t);if(_dbg.length>8)_dbg.shift();const el=D('dbgPanel');if(el)el.textContent=_dbg.join('\n');}
+(function(){if(localStorage.getItem('ht_banned_'+GID)==='1'){D('regScreen').classList.add('hide');D('blockedScreen').classList.add('show');}})();
+D('regName').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister(e);});
+function doRegister(e){if(e&&e.cancelable)e.preventDefault();const v=D('regName').value.trim().toUpperCase();if(!v||v.length<2){D('regErr').textContent='Nama minimal 2 karakter';return;}if(!/^[A-Z0-9 _\-]+$/.test(v)){D('regErr').textContent='Gunakan huruf/angka saja';return;}const em=(D('regEmail').value||'').trim().toLowerCase();if(!em||!em.includes('@')||!em.includes('.')){D('regErr').textContent='Email tidak valid (contoh: nama@gmail.com)';return;}NAME=v;_userEmail=em;try{localStorage.setItem(_ID_KEY,JSON.stringify({uid:ME,name:NAME,email:em}));}catch(err){}D('hdrName').textContent='👤 '+NAME;D('regScreen').classList.add('hide');startSystem();}
+function startSystem(){setSt('Minta izin mikrofon...','info');showNetBanner(true,'MEMUAT SDK JARINGAN...');navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false}).then(s=>{mic=s;mic.getAudioTracks().forEach(t=>t.enabled=false);dbg('MIC OK');setSt('Mikrofon OK · Memuat jaringan...','ok');initOrWaitPN();}).catch(e=>{dbg('MIC GAGAL: '+e.name);setSt('⚠ MIC DITOLAK · Hanya bisa mendengar','err');D('micBanner').classList.add('show');initOrWaitPN();});}
+function ensureActx(){if(actx){if(actx.state==='suspended')actx.resume();return actx;}try{actx=new(window.AudioContext||window.webkitAudioContext)();const b=actx.createBuffer(1,actx.sampleRate,actx.sampleRate),s=actx.createBufferSource();s.buffer=b;s.loop=true;s.connect(actx.destination);s.start();return actx;}catch(e){return null;}}
+function beep(f,d,v){try{if(!actx)return;if(actx.state==='suspended')actx.resume();const o=actx.createOscillator(),g=actx.createGain();o.connect(g);g.connect(actx.destination);o.frequency.value=f;g.gain.setValueAtTime(v,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.start();o.stop(actx.currentTime+d);}catch(e){}}
+let _au=false;
+function forceUnlockAudio(){if(!actx)ensureActx();if(actx&&actx.state==='suspended')actx.resume();try{if(window.speechSynthesis){const u=new SpeechSynthesisUtterance('');u.volume=0;window.speechSynthesis.speak(u);setTimeout(()=>window.speechSynthesis.cancel(),100);}}catch(e){}if(!_au){_au=true;dbg('AudioUnlocked');}D('audioBanner').classList.remove('show');document.querySelectorAll('audio[id^="aud_"]').forEach(a=>{if(a.srcObject){a.muted=false;a.volume=1;a.play().catch(e=>dbg('rePlay:'+e.name));}});}
+document.addEventListener('touchstart',()=>{if(!actx)ensureActx();if(actx&&actx.state==='suspended')actx.resume();},{once:true,passive:true});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    // Saat masuk background: pastikan audio elemen tetap jalan
+    document.querySelectorAll('audio[id^="aud_"]').forEach(a=>{
+      if(a.srcObject&&a.paused){a.muted=false;a.play().catch(()=>{});}
+    });
+    return;
+  }
+  // Kembali ke foreground: resume semua
+  if(actx&&actx.state==='suspended')actx.resume();
+  document.querySelectorAll('audio[id^="aud_"]').forEach(a=>{
+    if(a.srcObject){a.muted=false;a.volume=1;a.play().catch(()=>{});}
+  });
+  if(isOn)reqWL();
+  if(isOn&&mode==='standby'){resumeBgAudio();dbg('Kembali foreground, resume bg audio');}
+});
+async function reqWL(){try{if(!wl&&'wakeLock'in navigator)wl=await navigator.wakeLock.request('screen');}catch(e){}}
+function relWL(){try{if(wl){wl.release();wl=null;}}catch(e){}}
+function speak(text,cb){const done=()=>{try{if(cb)cb();}catch(e){}};try{if(window.speechSynthesis){window.speechSynthesis.cancel();if(window.speechSynthesis.paused)window.speechSynthesis.resume();function ds(){const vv=window.speechSynthesis.getVoices();const v=vv.find(x=>/id[-_]ID/i.test(x.lang))||vv.find(x=>/id/i.test(x.lang))||vv[0];const parts=(text.match(/[^.!?]+[.!?]*/g)||[text]).map(s=>s.trim()).filter(Boolean);let i=0;function nx(){if(i>=parts.length){done();return;}const u=new SpeechSynthesisUtterance(parts[i++]);u.lang='id-ID';u.rate=.88;u.pitch=1.15;u.volume=1;if(v)u.voice=v;let to=setTimeout(()=>{window.speechSynthesis.cancel();setTimeout(nx,100);},8000);u.onend=()=>{clearTimeout(to);setTimeout(nx,80);};u.onerror=()=>{clearTimeout(to);setTimeout(nx,80);};window.speechSynthesis.resume();window.speechSynthesis.speak(u);}nx();}const vv=window.speechSynthesis.getVoices();if(vv.length>0)ds();else{let t=0;const w=setInterval(()=>{if(window.speechSynthesis.getVoices().length>0||t++>15){clearInterval(w);ds();}},100);window.speechSynthesis.onvoiceschanged=()=>{clearInterval(w);window.speechSynthesis.onvoiceschanged=null;ds();};setTimeout(()=>{clearInterval(w);ds();},2000);}return;}}catch(e){}done();}
+function sendHB(){if(!pn||!NAME)return;pn.publish({channel:LOBBY_CH,message:{type:'heartbeat',from:ME,name:NAME,email:_userEmail,channel:ch||0,mode:mode,ts:Date.now()}}).catch(()=>{});}
+function startHB(){stopHB();sendHB();hbTimer=setInterval(sendHB,mode==='standby'?15000:25000);}
+function stopHB(){if(hbTimer){clearInterval(hbTimer);hbTimer=null;}}
+function sendBye(){if(!pn||!NAME)return;try{pn.publish({channel:LOBBY_CH,message:{type:'bye',from:ME,name:NAME}}).catch(()=>{});}catch(e){}}
+function sendJoinRequest(){if(!pn||!NAME)return;pn.publish({channel:LOBBY_CH,message:{type:'join_request',from:ME,name:NAME,email:_userEmail,ts:Date.now()}}).catch(()=>{});D('waitStatus').textContent='Permintaan terkirim · Tunggu admin...';}
+function handleAdminCmd(m){if(!m)return;const isMe=(m.target===ME)||(m.targetName===NAME)||(m.target==='ALL');
+  if(m.type==='announce'){showAnnounce(m.message||'');return;}
+  // ACC/APPROVED
+  if(m.type==='approved'&&(m.target===ME||m.targetName===NAME)){_isApproved=true;try{localStorage.setItem(SELF_APPR_KEY,'1');}catch(e){}try{sessionStorage.setItem(SELF_APPR_KEY,'1');}catch(e){}if(_jrTimer){clearInterval(_jrTimer);_jrTimer=null;}D('waitScreen').classList.remove('show');showAnnounce('✅ KAMU SUDAH DI-ACC! Pilih channel untuk mulai.');setChReady(pnReady);D('badge').textContent='NORMAL';D('badge').className='';setSt('✅ Di-ACC admin · Pilih channel 1–9','ok');setLCD('-','PILIH CHANNEL','info');startHB();return;}
+  // DITOLAK
+  if(m.type==='rejected'&&(m.target===ME||m.targetName===NAME)){if(_jrTimer){clearInterval(_jrTimer);_jrTimer=null;}D('waitScreen').classList.remove('show');D('rejMsg').textContent=(m.reason?'Alasan: '+m.reason+'\n\n':'')+'Hubungi admin untuk info lebih lanjut.';D('rejectedScreen').classList.add('show');return;}
+  // CABUT ACC
+  if(m.type==='revoked'&&(m.target===ME||m.targetName===NAME)){_isApproved=false;try{localStorage.removeItem(SELF_APPR_KEY);}catch(e){}stopHB();sendBye();Object.keys(peers).forEach(killPeer);if(pn)try{pn.unsubscribeAll();}catch(e){}D('waitScreen').classList.add('show');D('waitStatus').textContent='ACC dicabut admin · Mengirim ulang permintaan...';setTimeout(sendJoinRequest,2000);return;}
+  // Admin minta semua pending kirim ulang request
+  if(m.type==='request_resend'){if(!_isApproved&&pn)sendJoinRequest();return;}
+  if(!isMe)return;
+  if(m.type==='kick'||m.type==='kickname')doKick(m.reason||'');
+  if(m.type==='ban'||m.type==='banname')doBan(m.reason||'');
+  if(m.type==='mute'){if(mic)mic.getAudioTracks().forEach(t=>t.enabled=false);if(isTX)pttOFF(null);setSt('🔇 DIKUNCI ADMIN · Tidak bisa bicara','err');showAnnounce('🔇 Admin mengunci mikrofon kamu');}
+  if(m.type==='unmute'){setSt('🔊 Mikrofon dibuka admin · Pilih channel','ok');showAnnounce('🔊 Admin membuka mikrofon kamu');}}
+function showAnnounce(msg){const el=document.createElement('div');el.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#0a1a00;border:2px solid #3a7800;border-radius:10px;color:#aed000;font-size:12px;font-family:Courier New,monospace;letter-spacing:2px;padding:12px 20px;z-index:3000;max-width:90%;text-align:center;word-break:break-word;';el.textContent='📣 '+msg;document.body.appendChild(el);setTimeout(()=>el.remove(),6000);}
+function doKick(r){stopHB();sendBye();if(isTX)pttOFF(null);if(mic)mic.getAudioTracks().forEach(t=>t.enabled=false);Object.keys(peers).forEach(killPeer);if(pn){try{pn.unsubscribeAll();}catch(e){}}relWL();D('kickMsg').textContent=r?'Anda diputus: '+r:'Anda telah diputus dari jaringan oleh Administrator.';D('kickOverlay').classList.add('show');dbg('KICKED');}
+function doBan(r){localStorage.setItem('ht_banned_'+GID,'1');stopHB();sendBye();if(isTX)pttOFF(null);if(mic)mic.getAudioTracks().forEach(t=>t.enabled=false);Object.keys(peers).forEach(killPeer);if(pn){try{pn.unsubscribeAll();}catch(e){}}relWL();D('kickOverlay').classList.remove('show');D('blockedScreen').classList.add('show');dbg('BANNED');}
+function pwrOff(){if(!isOn)return;ensureActx();isOn=false;stopHB();sendBye();if(isTX)pttOFF(null);if(mic)mic.getAudioTracks().forEach(t=>t.enabled=false);if(ch){try{pub({type:'bye',from:ME});}catch(e){}Object.keys(peers).forEach(killPeer);peers={};try{pn.unsubscribeAll();}catch(e){}}relWL();setLCD('-','MATIKAN...','info');setSt('Sampai jumpa...','info');speak('Terima kasih telah menggunakan layanan H T Julianto. Perangkat akan dimatikan. Sampai jumpa.',()=>{beep(440,.15,.18);setTimeout(()=>beep(330,.2,.18),160);setTimeout(()=>{D('offOverlay').classList.add('show');D('pwrBtn').classList.remove('on');},380);});setTimeout(()=>{if(!isOn){D('offOverlay').classList.add('show');D('pwrBtn').classList.remove('on');}},6000);}
+function pwrOn(){if(isOn)return;ensureActx();isOn=true;D('offOverlay').classList.remove('show');D('pwrBtn').classList.add('on');if(actx&&actx.state==='suspended')actx.resume();reqWL();setLCD('-','MENYALA...','info');setSt('Menyalakan perangkat...','info');beep(660,.08,.14);setTimeout(()=>beep(880,.08,.14),130);setTimeout(()=>beep(1100,.12,.14),260);speak('Selamat datang di H T Julianto. Perangkat komunikasi Anda kini aktif. Silakan pilih channel untuk memulai. Terima kasih.');if(pnReady)startHB();setTimeout(()=>{if(ch&&pn){setLCD(ch,'SIAP','ok');setTimeout(bHello,300);}else setLCD('-','PILIH CHANNEL','info');setSt(ch?'Channel '+ch+' · '+NAME:(pnReady?'Pilih channel 1–9':'Menunggu jaringan...'),'ok');},300);}
+function doMode(m){if(!isOn)return;ensureActx();mode=m;const N=D('btnN'),S=D('btnS'),sn=D('stbyNotice'),pb=D('pttBtn'),ph=D('pttHint'),bg=D('badge');if(m==='standby'){N.classList.remove('an');S.classList.add('as');sn.classList.add('show');pb.classList.add('dis');ph.textContent='STANDBY · HANYA DENGAR · TEKAN NORMAL UNTUK BICARA';bg.textContent='STANDBY';bg.className='stby';if(isTX)pttOFF(null);if(mic)mic.getAudioTracks().forEach(t=>t.enabled=false);reqWL();startKeepAlive();if(ch)setLCD(ch,'MONITOR','info');setSt('STANDBY · Monitor aktif · Layar tetap hidup','info');beep(550,.1,.12);}else{S.classList.remove('as');N.classList.add('an');sn.classList.remove('show');pb.classList.remove('dis');ph.textContent='TAHAN TOMBOL UNTUK BICARA · LEPAS = SELESAI';bg.textContent='NORMAL';bg.className='';reqWL();stopKeepAlive();if(ch)setLCD(ch,'SIAP','ok');setSt('Channel '+(ch||'-')+' · '+NAME,'ok');beep(660,.08,.12);}}
+function doCh(n){if(!isOn)return;ensureActx();if(!pn){setSt(window._pnSDKFailed?'GAGAL JARINGAN · Refresh':'Jaringan loading · Tunggu...','err');return;}if(n===ch)return;if(ch){try{pub({type:'bye',from:ME});}catch(e){}Object.keys(peers).forEach(killPeer);peers={};try{pn.unsubscribeAll();}catch(e){}}document.querySelectorAll('.cbtn').forEach((b,i)=>b.classList.toggle('act',i+1===n));ch=n;updPeers();setLCD(n,'BERGABUNG...','info');setSt('Bergabung ke Channel '+n+'...','info');pn.subscribe({channels:[room(),LOBBY_CH,CMD_CH]});setTimeout(()=>{bHello();sendHB();setLCD(n,mode==='standby'?'MONITOR':'SIAP',mode==='standby'?'info':'ok');setSt((mode==='standby'?'STANDBY · Monitor':'Channel')+' '+n+' · '+NAME,'ok');},600);}
+function room(){return 'ht_'+GID+'_ch'+ch;}
+function pttON(e){if(e&&e.cancelable)e.preventDefault();if(!isOn||mode==='standby'||isTX)return;ensureActx();forceUnlockAudio();if(!ch){setSt('Pilih channel dulu!','err');return;}isTX=true;D('pttBtn').classList.add('act');D('pttBtn').innerHTML='📢 SIARAN...';if(mic)mic.getAudioTracks().forEach(t=>{t.enabled=true;dbg('PTT ON en='+t.enabled);});D('badge').textContent='TX';D('badge').className='tx';setLCD(ch,'● TX','tx');setSt('🔴 SEDANG BICARA...','info');beep(880,.07,.12);D('txWrap').classList.add('show');startTX();}
+function pttOFF(e){if(e&&e.cancelable)e.preventDefault();if(!isTX)return;isTX=false;D('pttBtn').classList.remove('act');D('pttBtn').innerHTML='🎙 TAHAN = BICARA';if(mic)mic.getAudioTracks().forEach(t=>t.enabled=false);D('txWrap').classList.remove('show');stopTX();showReady();beep(660,.08,.14);setTimeout(()=>beep(1320,.08,.14),110);}
+;(function(){const btn=D('pttBtn');let md=false;btn.addEventListener('mousedown',e=>{if('ontouchstart'in window)return;md=true;pttON(e);});window.addEventListener('mouseup',()=>{if('ontouchstart'in window)return;if(md){md=false;pttOFF(null);}});})();
+function startTX(){if(!actx||!mic)return;try{if(txRaf){cancelAnimationFrame(txRaf);txRaf=null;}const src=actx.createMediaStreamSource(mic);txAna=actx.createAnalyser();txAna.fftSize=256;src.connect(txAna);txBuf=new Uint8Array(txAna.frequencyBinCount);function draw(){if(!isTX){D('txFill').style.width='0%';return;}txAna.getByteFrequencyData(txBuf);const avg=txBuf.reduce((a,b)=>a+b,0)/txBuf.length;D('txFill').style.width=Math.min(100,avg*4)+'%';txRaf=requestAnimationFrame(draw);}draw();}catch(e){}}
+function stopTX(){if(txRaf){cancelAnimationFrame(txRaf);txRaf=null;}D('txFill').style.width='0%';}
+function pub(msg){if(!pn||!ch)return;pn.publish({channel:room(),message:msg}).catch(()=>{});}
+function bHello(){pub({type:'hello',from:ME,name:NAME,email:_userEmail});}
+function onMsg(m){if(!m||!m.from)return;const f=m.from;if(m.type==='kick'||m.type==='ban'||m.type==='kickname'||m.type==='banname'||m.type==='announce'||m.type==='approved'||m.type==='rejected'||m.type==='revoked'||m.type==='mute'||m.type==='unmute'||m.type==='request_resend'){handleAdminCmd(m);return;}if(m.type==='heartbeat'||m.type==='join_request')return;if(f===ME)return;switch(m.type){case 'hello':if(!peers[f]){if(ME>f)makeOffer(f);else pub({type:'hello',from:ME,name:NAME});}break;case 'offer':if(m.to===ME)handleOffer(f,m.sdp);break;case 'answer':if(m.to===ME)handleAns(f,m.sdp);break;case 'ice':if(m.to===ME)handleICE(f,m.candidate);break;case 'bye':killPeer(f);break;}}
+function mkPC(pid){if(peers[pid])return peers[pid].pc;const pc=new RTCPeerConnection({iceServers:ICE_SERVERS});peers[pid]={pc,iceBuf:[],raf:null,srcNode:null,_stream:null};if(mic){mic.getTracks().forEach(t=>{pc.addTrack(t,mic);dbg('addTrack '+t.kind);});}else{try{pc.addTransceiver('audio',{direction:'recvonly'});}catch(e){}}pc.onicecandidate=({candidate})=>{if(candidate)pub({type:'ice',to:pid,from:ME,candidate:{candidate:candidate.candidate,sdpMid:candidate.sdpMid,sdpMLineIndex:candidate.sdpMLineIndex}});};pc.oniceconnectionstatechange=()=>{dbg('ICE: '+pc.iceConnectionState);};pc.onconnectionstatechange=()=>{dbg('PC: '+pc.connectionState);updPeers();const s=pc.connectionState;if(s==='failed'||s==='closed'||s==='disconnected')killPeer(pid);};pc.ontrack=({streams,track})=>{dbg('ONTRACK! '+track.kind);const s=streams[0]||new MediaStream([track]);playAudio(s,pid);};updPeers();return pc;}
+async function makeOffer(pid){try{const pc=mkPC(pid),o=await pc.createOffer();await pc.setLocalDescription(o);pub({type:'offer',to:pid,from:ME,sdp:pc.localDescription.sdp});}catch(e){}}
+async function handleOffer(fid,sdp){try{const pc=mkPC(fid);await pc.setRemoteDescription({type:'offer',sdp});for(const c of peers[fid].iceBuf){try{await pc.addIceCandidate(c);}catch(e){}}peers[fid].iceBuf=[];const a=await pc.createAnswer();await pc.setLocalDescription(a);pub({type:'answer',to:fid,from:ME,sdp:pc.localDescription.sdp});}catch(e){}}
+async function handleAns(fid,sdp){if(!peers[fid])return;try{const pc=peers[fid].pc;if(pc.signalingState==='have-local-offer'){await pc.setRemoteDescription({type:'answer',sdp});for(const c of peers[fid].iceBuf){try{await pc.addIceCandidate(c);}catch(e){}}peers[fid].iceBuf=[];}}catch(e){}}
+async function handleICE(fid,c){if(!peers[fid])return;const cand=new RTCIceCandidate(c),pc=peers[fid].pc;if(pc.remoteDescription&&pc.remoteDescription.type){try{await pc.addIceCandidate(cand);}catch(e){}}else peers[fid].iceBuf.push(cand);}
+function killPeer(pid){if(!peers[pid])return;if(peers[pid].raf){cancelAnimationFrame(peers[pid].raf);peers[pid].raf=null;}if(peers[pid].srcNode){try{peers[pid].srcNode.disconnect();}catch(e){}}try{peers[pid].pc.close();}catch(e){}const el=D('aud_'+pid);if(el)el.remove();delete peers[pid];updPeers();D('rxFill').style.width='0%';if(!isTX)showReady();}
+function routeViaActx(s,pid){if(!actx)return false;try{if(actx.state==='suspended')actx.resume();if(peers[pid]&&peers[pid].srcNode){try{peers[pid].srcNode.disconnect();}catch(e){}}if(peers[pid]&&peers[pid].raf){cancelAnimationFrame(peers[pid].raf);peers[pid].raf=null;}const src=actx.createMediaStreamSource(s);const ana=actx.createAnalyser();ana.fftSize=512;src.connect(ana);if(peers[pid]){peers[pid].srcNode=src;peers[pid].anaNode=ana;}const buf=new Uint8Array(ana.frequencyBinCount);let sc=0;function draw(){if(!peers[pid]){D('rxFill').style.width='0%';return;}ana.getByteFrequencyData(buf);const avg=buf.reduce((a,b)=>a+b,0)/buf.length;D('rxFill').style.width=Math.min(100,avg*4)+'%';if(avg>6&&!isTX){sc=0;showRX(pid);}else{sc++;if(sc>30&&!isTX)showReady();}peers[pid].raf=requestAnimationFrame(draw);}draw();return true;}catch(e){return false;}}
+function playAudio(s,pid){if(peers[pid])peers[pid]._stream=s;const tracks=s.getAudioTracks();dbg('playAudio pid='+pid.slice(0,5)+' tracks='+tracks.length);if(!actx)ensureActx();if(actx&&actx.state!=='closed')routeViaActx(s,pid);let el=D('aud_'+pid);if(!el){el=document.createElement('audio');el.id='aud_'+pid;el.setAttribute('playsinline','');el.setAttribute('webkit-playsinline','');document.body.appendChild(el);dbg('audio el dibuat');}el.srcObject=s;el.muted=true;el.volume=1;
+el.onpause=()=>{if(document.visibilityState==='hidden'&&el.srcObject){setTimeout(()=>{el.muted=false;el.play().catch(()=>{});},500);}};
+el.play().then(()=>{dbg('play OK muted→unmute');el.muted=false;D('audioBanner').classList.remove('show');tracks.forEach(t=>{t.onunmute=()=>{dbg('track unmuted');showRX(pid);};t.onmute=()=>{if(!isTX)showReady();};});}).catch(err=>{dbg('play GAGAL: '+err.name);D('audioBanner').classList.add('show');const retry=()=>{el.muted=true;el.play().then(()=>{el.muted=false;D('audioBanner').classList.remove('show');}).catch(()=>{});};document.addEventListener('touchstart',retry,{once:true,passive:true});document.addEventListener('click',retry,{once:true,passive:true});});}
+function showReady(){if(isTX)return;const bg=D('badge');D('rxFill').style.width='0%';if(mode==='standby'){bg.textContent='STANDBY';bg.className='stby';setLCD(ch||'-',ch?'MONITOR':'PILIH CH','info');setSt('STANDBY · Monitor ch '+(ch||'-'),'info');}else{bg.textContent='NORMAL';bg.className='';setLCD(ch||'-',ch?'SIAP':'PILIH CH',ch?'ok':'info');setSt('Channel '+(ch||'-')+' · '+NAME,'ok');}}
+function showRX(pid){D('badge').textContent='RX';D('badge').className='rx';setLCD(ch,'◀ RX','rx');setSt('📡 Menerima dari '+pid+(mode==='standby'?' [STANDBY]':''),'info');}
+function setLCD(num,st,cls){const n=D('lcdNum');n.textContent=num;n.className=num==='-'?'dim':'';const s=D('lcdSt');s.textContent=st;s.className=cls||'';}
+function updPeers(){const n=Object.keys(peers).length,el=D('lcdPeers');if(n===0){el.textContent='Tidak ada radio lain di channel ini';el.className='';}else{el.textContent='● '+n+' radio terhubung';el.className='on';}}
+function setSt(t,c){const el=D('srow');el.textContent=t;el.className=c||'';}
+function setChReady(r){document.querySelectorAll('.cbtn').forEach(b=>{if(r)b.classList.remove('notready');else b.classList.add('notready');});}
+function showNetBanner(show,txt){const b=D('netBanner');if(show){b.classList.add('show');D('netBannerTxt').textContent=txt||'MEMUAT JARINGAN...';}else b.classList.remove('show');}
+function retryMic(){dbg('Minta izin mic...');navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false}).then(s=>{mic=s;mic.getAudioTracks().forEach(t=>t.enabled=false);dbg('MIC OK setelah retry!');setSt('✅ Mikrofon aktif · Siap bicara','ok');D('micBanner').classList.remove('show');if(ch&&pn){const oldCh=ch;ch=0;Object.keys(peers).forEach(killPeer);peers={};try{pn.unsubscribeAll();}catch(e){}setTimeout(()=>doCh(oldCh),400);}}).catch(e=>{dbg('Retry gagal: '+e.name);setSt('Masih ditolak · Cek izin di Chrome','err');});}
+function initOrWaitPN(){if(window._pnSDKFailed){setSt('GAGAL LOAD SDK · Cek internet','err');showNetBanner(true,'GAGAL JARINGAN · REFRESH');return;}if(window._pnSDKReady)initPN();else{showNetBanner(true,'MENGHUBUNGKAN SDK...');window._pnSDKReadyCb=initPN;setTimeout(()=>{if(!pnReady){setSt('Jaringan timeout · Refresh','err');showNetBanner(true,'TIMEOUT · REFRESH');}},15000);}}
+function initPN(){
+  // Re-cek admin status (admin IIFE sudah jalan setelah main script)
+  if(!_thisIsAdmin&&_checkIsAdmin()){_thisIsAdmin=true;_isApproved=true;}
+  try{pn=new PubNub({publishKey:PP,subscribeKey:PS,uuid:ME});}catch(e){setSt('GAGAL INIT JARINGAN','err');showNetBanner(true,'ERROR · REFRESH');return;}pn.addListener({message:({message})=>onMsg(message),status:({category})=>{if(category==='PNConnectedCategory'){pnReady=true;showNetBanner(false);if(_isApproved){setChReady(true);D('badge').textContent='NORMAL';D('badge').className='';setSt('Terhubung · Pilih channel 1–9','ok');setLCD(ch||'-',ch?'SIAP':'PILIH CH',ch?'ok':'info');startHB();}else{D('waitScreen').classList.add('show');D('waitStatus').textContent='Terhubung · Mengirim permintaan...';sendJoinRequest();if(_jrTimer)clearInterval(_jrTimer);_jrTimer=setInterval(sendJoinRequest,30000);setSt('Menunggu persetujuan admin...','info');setLCD('-','TUNGGU ACC','info');}}if(category==='PNNetworkDownCategory'){pnReady=false;setChReady(false);showNetBanner(true,'JARINGAN TERPUTUS...');setSt('Jaringan terputus...','err');stopHB();if(!_isApproved)D('waitStatus').textContent='Koneksi terputus · Menghubungkan ulang...';}if(category==='PNReconnectedCategory'){pnReady=true;showNetBanner(false);if(_isApproved){setChReady(true);setSt('Terhubung kembali','ok');startHB();if(ch)bHello();}else{sendJoinRequest();}}}});pn.subscribe({channels:[LOBBY_CH,CMD_CH,'ht_init_'+ME]});setLCD('-','MENGHUBUNGKAN','info');setSt('Menghubungkan ke jaringan...','info');showNetBanner(true,'MENGHUBUNGKAN...');}
+function genId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:5},()=>c[Math.floor(Math.random()*c.length)]).join('');}
+let _kaTimer=null,_bgAudioEl=null;
+// Silent WAV 1 detik — untuk keep audio session aktif di background Android
+const _silentWav='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+
+function startBgAudio(){
+  if(_bgAudioEl)return;
+  _bgAudioEl=document.createElement('audio');
+  _bgAudioEl.id='_bgkeep';
+  _bgAudioEl.src=_silentWav;
+  _bgAudioEl.loop=true;
+  _bgAudioEl.volume=0.001;
+  _bgAudioEl.setAttribute('playsinline','');
+  document.body.appendChild(_bgAudioEl);
+  _bgAudioEl.play().catch(e=>dbg('bgAudio err:'+e.name));
+}
+function resumeBgAudio(){if(_bgAudioEl&&_bgAudioEl.paused)_bgAudioEl.play().catch(()=>{});}
+function stopBgAudio(){if(_bgAudioEl){try{_bgAudioEl.pause();}catch(e){}_bgAudioEl.remove();_bgAudioEl=null;}}
+
+function startKeepAlive(){
+  startBgAudio();
+  if(_kaTimer)clearInterval(_kaTimer);
+  _kaTimer=setInterval(()=>{
+    if(!isOn||mode!=='standby')return;
+    sendHB();
+    // Re-play semua audio peer kalau ada yang pause
+    document.querySelectorAll('audio[id^="aud_"]').forEach(a=>{
+      if(a.srcObject&&a.paused){a.muted=false;a.play().catch(()=>{});}
+    });
+    resumeBgAudio();
+  },18000);
+}
+function stopKeepAlive(){
+  if(_kaTimer){clearInterval(_kaTimer);_kaTimer=null;}
+  stopBgAudio();
+}
+window.addEventListener('beforeunload',()=>{stopHB();sendBye();});
+</script>
+
+<!-- ══════════════════════════════════════
+     ADMIN SCRIPT
+══════════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+const A_GID='JULIANTO2024',A_PP='demo',A_PS='demo',A_SECRET='JULIADMIN99';
+const A_PASS='240306'; // ← KODE ADMIN PERMANEN
+const A_AUTH_KEY='ht_admin_auth_'+A_GID; // key localStorage admin
+const A_LOBBY='ht_'+A_GID+'_lobby',A_CMD='ht_'+A_GID+'_cmd_'+A_SECRET;
+const A_ME='ADMIN_'+(Math.random().toString(36).slice(2,7)).toUpperCase();
+const $=id=>document.getElementById(id);
+
+// Cek apakah HP ini sudah tersimpan sebagai admin
+let _isSavedAdmin=false;try{_isSavedAdmin=localStorage.getItem(A_AUTH_KEY)==='1';}catch(e){}
+const A_APPR_KEY='ht_admin_approved_'+A_GID;
+let aPN=null,aUsers={},aBans=[],aPending={},aApproved=[],aFilter='all',aStale=null,aDlgCb=null,aToastT=null,aLoggedIn=_isSavedAdmin;
+
+// ══ OPEN / CLOSE ══
+window.adm_open=function(){
+  // Selalu re-cek setiap buka dari semua storage
+  try{if(localStorage.getItem(A_AUTH_KEY)==='1')aLoggedIn=true;}catch(e){}
+  try{if(sessionStorage.getItem(A_AUTH_KEY)==='1')aLoggedIn=true;}catch(e){}
+  try{const id=JSON.parse(localStorage.getItem('ht_identity_'+A_GID)||'{}');if(id.isAdmin)aLoggedIn=true;}catch(e){}
+  $('admOverlay').classList.add('show');
+  $('admBtn').classList.add('adm-on');
+  if(!aLoggedIn){
+    $('admLogin').classList.remove('hide');
+    $('admPanel').classList.remove('show');
+    setTimeout(()=>$('admPwInput').focus(),300);
+  } else {
+    $('admLogin').classList.add('hide');
+    $('admPanel').classList.add('show');
+    if(!aPN){aLoadBans();aLoadApproved();aInitPN();}
+  }
+};
+window.adm_close=function(){
+  $('admOverlay').classList.remove('show');
+  $('admBtn').classList.remove('adm-on');
+};
+
+// ══ LOGIN ══
+$('admPwInput').addEventListener('keydown',e=>{if(e.key==='Enter')adm_login();});
+window.adm_login=function(){
+  const v=$('admPwInput').value.trim();
+  if(v!==A_PASS){$('admLoginErr').textContent='❌ Kode salah!';$('admPwInput').value='';$('admPwInput').focus();return;}
+  aLoggedIn=true;
+  try{localStorage.setItem(A_AUTH_KEY,'1');}catch(e){}
+  try{sessionStorage.setItem(A_AUTH_KEY,'1');}catch(e){} // fallback
+  // Tandai identity sebagai admin (lebih persistent)
+  try{const id=JSON.parse(localStorage.getItem('ht_identity_'+A_GID)||'{}');id.isAdmin=true;localStorage.setItem('ht_identity_'+A_GID,JSON.stringify(id));}catch(e){}
+  $('admLoginErr').textContent='';$('admPwInput').value='';
+  $('admLogin').classList.add('hide');$('admPanel').classList.add('show');
+  aLoadBans();aInitPN();
+};
+window.adm_logout=function(){
+  aLoggedIn=false;
+  try{localStorage.removeItem(A_AUTH_KEY);}catch(e){}
+  try{sessionStorage.removeItem(A_AUTH_KEY);}catch(e){}
+  try{const id=JSON.parse(localStorage.getItem('ht_identity_'+A_GID)||'{}');delete id.isAdmin;localStorage.setItem('ht_identity_'+A_GID,JSON.stringify(id));}catch(e){}
+  if(aPN){try{aPN.unsubscribeAll();}catch(e){}aPN=null;}
+  clearInterval(aStale);aUsers={};aBans=[];aPending={};
+  $('admPanel').classList.remove('show');$('admLogin').classList.remove('hide');$('admPwInput').value='';
+  adm_close();
+};
+
+// ══ PUBNUB ══
+function aInitPN(){
+  if(!window._pnSDKReady){window._admPNReadyCb=aInitPN;return;}
+  try{aPN=new PubNub({publishKey:A_PP,subscribeKey:A_PS,uuid:A_ME});}catch(e){aToast('GAGAL INIT PUBNUB','err');return;}
+  aPN.addListener({
+    message:({message})=>{if(!message||!message.type)return;aHandleMsg(message);},
+    status:({category})=>{
+      const el=$('admPnSt');
+      if(category==='PNConnectedCategory'){el.textContent='ONLINE';el.className='adm-pn-st on';aToast('TERHUBUNG');// Minta semua pending user kirim ulang request
+setTimeout(()=>aSendCmd({type:'request_resend',from:'ADMIN'}),1500);}
+      if(category==='PNNetworkDownCategory'){el.textContent='OFFLINE';el.className='adm-pn-st off';}
+      if(category==='PNReconnectedCategory'){el.textContent='ONLINE';el.className='adm-pn-st on';}
+    }
+  });
+  aPN.subscribe({channels:[A_LOBBY,A_CMD]});
+  aStale=setInterval(aRemoveStale,15000);
+}
+
+function aHandleMsg(m){
+  if(!m.from)return;const pid=m.from,ts=Date.now();
+  if(m.type==='heartbeat'||m.type==='join'){aUsers[pid]={name:m.name||pid,email:m.email||'',channel:m.channel||0,mode:m.mode||'normal',lastSeen:ts};aUpdateUI();}
+  if(m.type==='bye'){if(aUsers[pid])delete aUsers[pid];if(aPending[pid])delete aPending[pid];aUpdateUI();}
+  if(m.type==='join_request'){
+    const alreadyApproved=aApproved.find(a=>a.pid===pid||a.email===m.email);
+    if(alreadyApproved){// kirim ulang ACC otomatis
+      aSendCmd({type:'approved',target:pid,targetName:m.name||pid,from:'ADMIN'});
+      aToast('✅ Auto-ACC: '+m.name);return;}
+    const alreadyBanned=aBans.find(b=>b.pid===pid||(m.email&&b.email===m.email));
+    if(alreadyBanned){aSendCmd({type:'rejected',target:pid,targetName:m.name,reason:'Diblokir',from:'ADMIN'});return;}
+    if(!aPending[pid]){aPending[pid]={pid,name:m.name||pid,email:m.email||'',ts};
+      $('aPendBadge').textContent=Object.keys(aPending).length;$('aPendBadge').classList.add('show');
+      aToast('📥 MINTA MASUK: '+m.name);}
+    else{aPending[pid].ts=ts;}
+    aRenderPending();aUpdateStats();}
+}
+function aRemoveStale(){const now=Date.now();let c=false;Object.keys(aUsers).forEach(p=>{if(now-aUsers[p].lastSeen>70000){delete aUsers[p];c=true;}});if(c)aUpdateUI();}
+
+window.adm_approve=function(pid){const u=aPending[pid];if(!u)return;aSendCmd({type:'approved',target:pid,targetName:u.name,from:'ADMIN'});aApproved=aApproved.filter(a=>a.pid!==pid);aApproved.unshift({pid,name:u.name,email:u.email,accAt:new Date().toLocaleString('id-ID')});aSaveApproved();delete aPending[pid];const cnt=Object.keys(aPending).length;$('aPendBadge').textContent=cnt;if(!cnt)$('aPendBadge').classList.remove('show');aRenderPending();aRenderApproved();aUpdateStats();aToast('✅ DI-ACC: '+u.name);};
+
+window.adm_reject=function(pid){const u=aPending[pid];if(!u)return;aSendCmd({type:'rejected',target:pid,targetName:u.name,reason:'Admin menolak permintaan',from:'ADMIN'});delete aPending[pid];const cnt=Object.keys(aPending).length;$('aPendBadge').textContent=cnt;if(!cnt)$('aPendBadge').classList.remove('show');aRenderPending();aUpdateStats();aToast('❌ TOLAK: '+u.name);};
+
+window.adm_revokeAcc=function(pid){aApproved=aApproved.filter(a=>a.pid!==pid);aSaveApproved();aSendCmd({type:'revoked',target:pid,from:'ADMIN'});aRenderApproved();aUpdateStats();aToast('🔄 ACC DICABUT');};
+
+// ON/OFF (mute) user
+window.adm_mute=function(pid,name){aSendCmd({type:'mute',target:pid,targetName:name,from:'ADMIN'});if(aUsers[pid])aUsers[pid].muted=true;aRenderUsers();aToast('🔇 KUNCI: '+name);};
+window.adm_unmute=function(pid,name){aSendCmd({type:'unmute',target:pid,targetName:name,from:'ADMIN'});if(aUsers[pid])aUsers[pid].muted=false;aRenderUsers();aToast('🔊 BUKA: '+name);};
+
+// ══ BANS ══
+function aLoadBans(){try{const s=localStorage.getItem('ht_admin_banlist_'+A_GID);aBans=s?JSON.parse(s):[];}catch(e){aBans=[];}aRenderBans();}
+function aLoadApproved(){try{const s=localStorage.getItem(A_APPR_KEY);aApproved=s?JSON.parse(s):[];}catch(e){aApproved=[];}aRenderApproved();}
+function aSaveApproved(){try{localStorage.setItem(A_APPR_KEY,JSON.stringify(aApproved));}catch(e){}}
+function aSaveBans(){try{localStorage.setItem('ht_admin_banlist_'+A_GID,JSON.stringify(aBans));}catch(e){}}
+function aAddBan(pid,name){aBans=aBans.filter(b=>b.pid!==pid&&b.name!==name);aBans.unshift({pid,name,bannedAt:new Date().toLocaleString('id-ID')});aSaveBans();aRenderBans();aUpdateStats();}
+window.adm_unban=function(pid){aBans=aBans.filter(b=>b.pid!==pid);aSaveBans();aRenderBans();aUpdateStats();aToast('BAN DICABUT');};
+
+// ══ SEND CMD ══
+function aSendCmd(obj){if(!aPN){aToast('TIDAK TERHUBUNG','err');return;}aPN.publish({channel:A_CMD,message:obj}).catch(()=>{});aPN.publish({channel:A_LOBBY,message:obj}).catch(()=>{});}
+function aKick(pid,name,reason){aSendCmd({type:'kick',target:pid,targetName:name,reason:reason||'',from:'ADMIN'});setTimeout(()=>{if(aUsers[pid])delete aUsers[pid];aUpdateUI();},3000);aToast('⚡ KICK → '+name);}
+function aBan(pid,name,reason){aSendCmd({type:'ban',target:pid,targetName:name,reason:reason||'',from:'ADMIN'});aAddBan(pid,name);setTimeout(()=>{if(aUsers[pid])delete aUsers[pid];aUpdateUI();},3000);aToast('🚫 BAN → '+name);}
+
+window.adm_broadcast=function(){const msg=$('aBcMsg').value.trim();if(!msg){aToast('Pesan kosong','err');return;}aSendCmd({type:'announce',message:msg,from:'ADMIN'});$('aBcMsg').value='';aToast('📣 BROADCAST DIKIRIM');};
+window.adm_kickAll=function(){aOpenDlg('⚡ PUTUS SEMUA','Semua pengguna online akan diputus. Yakin?','PUTUS','warn',()=>{const r=$('aDlgReason').value.trim()||'Admin memutus semua';Object.keys(aUsers).forEach(p=>aSendCmd({type:'kick',target:p,reason:r,from:'ADMIN'}));setTimeout(()=>{aUsers={};aUpdateUI();},3000);aToast('⚡ SEMUA DIPUTUS');});};
+
+// ══ UI ══
+function aUpdateUI(){aUpdateStats();aRenderCh();aRenderUsers();aRenderPending();aRenderApproved();}
+function aUpdateStats(){const arr=Object.values(aUsers);$('aSOnline').textContent=arr.length;$('aSPending').textContent=Object.keys(aPending).length;$('aSBanned').textContent=aBans.length;$('aBanCnt').textContent=aBans.length;$('aApvCnt').textContent=aApproved.length;}
+function aRenderCh(){const c={};for(let i=1;i<=9;i++)c[i]=0;Object.values(aUsers).forEach(u=>{if(u.channel>=1&&u.channel<=9)c[u.channel]++;});$('aChGrid').innerHTML=Array.from({length:9},(_,i)=>i+1).map(n=>`<div class="a-ch ${c[n]>0?'act':''}"><div class="a-ch-n">${n}</div><div class="a-ch-c">${c[n]>0?c[n]+' user':'kosong'}</div></div>`).join('');}
+function aRenderUsers(){let filtered=Object.entries(aUsers);if(aFilter==='ch')filtered=filtered.filter(([,u])=>u.channel>0);if(!filtered.length){$('aUserList').innerHTML='<div class="a-empty">Tidak ada pengguna online</div>';return;}filtered.sort(([,a],[,b])=>(b.channel-a.channel)||(a.name.localeCompare(b.name)));$('aUserList').innerHTML=filtered.map(([pid,u])=>{const since=Math.round((Date.now()-u.lastSeen)/1000)+'s lalu';const chInfo=u.channel>0?'📡 CH '+u.channel+' · '+u.mode.toUpperCase():'⏳ Belum pilih channel';const emailRow=u.email?`<div class="a-uemail">✉ ${aEsc(u.email)}</div>`:'';const muteBtn=u.muted?`<button class="a-ubtn a-uon" onclick="adm_unmute('${pid}','${aEsc(u.name)}')">🔊 ON</button>`:`<button class="a-ubtn a-uoff" onclick="adm_mute('${pid}','${aEsc(u.name)}')">🔇 OFF</button>`;const muteBar=u.muted?'<div style="font-size:9px;color:#ff4444;letter-spacing:1px;margin-top:2px;">🔇 MIKROFON DIKUNCI</div>':'';return`<div class="a-ucard${u.muted?' a-ucard-muted':''}"><div class="a-uav" style="${u.muted?'border-color:#663333;color:#cc4444;':''}">${u.name.charAt(0)}</div><div class="a-uinfo"><div class="a-uname">${aEsc(u.name)}</div><div class="a-umeta">${chInfo}</div>${emailRow}${muteBar}<div class="a-uid">ID: ${pid} · ${since}</div></div><div class="a-uact">${muteBtn}<button class="a-ubtn a-ukick" onclick="adm_promptKick('${pid}','${aEsc(u.name)}')">⚡ KICK</button><button class="a-ubtn a-uban" onclick="adm_promptBan('${pid}','${aEsc(u.name)}')">🚫 BAN</button></div></div>`;}).join('');}
+function aRenderPending(){const entries=Object.values(aPending);$('aPendingList').innerHTML=entries.length?entries.map(u=>`<div class="a-pendcard"><div class="a-pend-av">${u.name.charAt(0)}</div><div class="a-pend-info"><div class="a-pend-name">${aEsc(u.name)}</div><div class="a-pend-email">✉ ${aEsc(u.email)}</div><div class="a-pend-id">ID: ${u.pid}</div></div><div class="a-pend-act"><button class="a-acc-btn" onclick="adm_approve('${u.pid}')">✅ ACC</button><button class="a-tolak-btn" onclick="adm_reject('${u.pid}')">❌ TOLAK</button></div></div>`).join(''):'<div class="a-empty">Tidak ada permintaan masuk</div>';}
+function aRenderApproved(){$('aApvCnt').textContent=aApproved.length;$('aApvList').innerHTML=aApproved.length?aApproved.map(u=>`<div class="a-apvcard"><div class="a-apv-av">${u.name.charAt(0)}</div><div class="a-apv-info"><div class="a-apv-name">${aEsc(u.name)}</div><div class="a-apv-meta">✉ ${aEsc(u.email||'-')} · ${u.accAt||''}</div></div><button class="a-cabut-btn" onclick="adm_revokeAcc('${u.pid}')">↩ CABUT</button></div>`).join(''):'<div class="a-empty">Belum ada yang di-ACC</div>';}
+function aRenderBans(){$('aBanCnt').textContent=aBans.length;if(!aBans.length){$('aBanList').innerHTML='<div class="a-empty">Belum ada yang diblokir</div>';return;}$('aBanList').innerHTML=aBans.map(b=>`<div class="a-bancard"><div style="flex:1"><div class="a-banname">🚫 ${aEsc(b.name)}</div><div class="a-banmeta">ID: ${b.pid} · ${b.bannedAt}</div></div><button class="a-ubtn a-uunban" onclick="adm_unban('${b.pid}')">↩ UNBAN</button></div>`).join('');}
+
+// ══ FILTER ══
+window.adm_filter=function(f){aFilter=f;$('aFAll').style.background=f==='all'?'#071e00':'#0a0a0a';$('aFAll').style.color=f==='all'?'#88cc44':'#444';$('aFCh').style.background=f==='ch'?'#071e00':'#0a0a0a';$('aFCh').style.color=f==='ch'?'#88cc44':'#444';aRenderUsers();};
+
+// ══ PROMPT ══
+window.adm_promptKick=function(pid,name){aOpenDlg('⚡ KICK','Putus koneksi '+name+'?\nBisa bergabung kembali.','KICK','',()=>aKick(pid,name,$('aDlgReason').value.trim()));};
+window.adm_promptBan=function(pid,name){aOpenDlg('🚫 BAN','Blokir '+name+' secara permanen?','BLOKIR','',()=>aBan(pid,name,$('aDlgReason').value.trim()));$('aDlgOk').style.background='#200000';$('aDlgOk').style.color='#ff4444';};
+
+// ══ DIALOG ══
+function aOpenDlg(title,msg,btnTxt,btnClass,cb){aDlgCb=cb;$('aDlgTitle').textContent=title;$('aDlgMsg').textContent=msg;$('aDlgReason').value='';$('aDlgOk').textContent=btnTxt;$('aDlgOk').className='a-dlg-btn a-dlg-ok'+(btnClass?' '+btnClass:'');$('admDlg').classList.add('show');}
+window.adm_closeDlg=function(){$('admDlg').classList.remove('show');aDlgCb=null;};
+window.adm_confirmDlg=function(){$('admDlg').classList.remove('show');if(aDlgCb){aDlgCb();aDlgCb=null;}};
+
+// ══ TOAST ══
+function aToast(msg,type=''){const el=$('admToast');el.textContent=msg;el.className='show'+(type?' '+type:'');if(aToastT)clearTimeout(aToastT);aToastT=setTimeout(()=>{el.className='';},3000);}
+
+// ══ UTILS ══
+function aEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// INIT
+aLoadApproved();aRenderCh();aRenderBans();aUpdateStats();aRenderPending();
+// Auto-apply saved admin state tanpa perlu buka panel dulu
+(function(){try{if(localStorage.getItem(A_AUTH_KEY)==='1'){aLoggedIn=true;}}catch(e){}})();
+})();
+</script>
+
+</body>
+</html>
